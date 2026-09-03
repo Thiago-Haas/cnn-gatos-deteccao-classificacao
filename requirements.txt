@@ -1,0 +1,12 @@
+grad-cam
+jupyterlab
+matplotlib
+numpy
+opencv-python
+pandas
+pillow
+scikit-learn
+seaborn
+torch
+torchvision
+ultralytics

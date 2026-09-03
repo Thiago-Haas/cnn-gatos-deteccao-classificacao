@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Datasets and generated artifacts
+data/
+datasets/
+oxford_pets/
+real_photos/
+runs/
+outputs/
+artifacts/
+
+# Model weights
+*.pt
+*.pth
+*.onnx
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
