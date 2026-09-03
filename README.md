@@ -33,11 +33,18 @@ O fluxo original foi preparado para o **Google Colab**, usa caminhos em `/conten
 Para preparar um ambiente local:
 
 ```bash
-python -m venv .venv
+chmod +x setup_venv.sh
+./setup_venv.sh
 source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 jupyter lab
+```
+
+O script cria o ambiente em `.venv/`, atualiza as ferramentas de instalação e baixa todas as dependências declaradas em `requirements.txt`. Esse diretório já está listado no `.gitignore` e não será enviado ao repositório.
+
+Se o executável do Python tiver outro nome ou caminho, informe-o assim:
+
+```bash
+PYTHON_BIN=/caminho/para/python ./setup_venv.sh
 ```
 
 Na execução local, altere `DATA_DIR` no notebook para um diretório local e substitua a célula que usa `google.colab.files.upload()` por caminhos de imagens existentes no computador.
