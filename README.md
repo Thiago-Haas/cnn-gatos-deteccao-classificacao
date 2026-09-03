@@ -63,6 +63,16 @@ O notebook baixa automaticamente o Oxford-IIIT Pet, os pesos da ResNet50 e o mod
 7. Detectar gatos em novas imagens com YOLOv8.
 8. Classificar o recorte e gerar sua explicação com Grad-CAM.
 
+### Controle de overfitting
+
+As duas fases de treinamento usam early stopping baseado na perda de validação e restauram automaticamente os pesos da melhor época:
+
+- treinamento da camada classificadora: `patience=3`;
+- fine-tuning da `layer4`: `patience=2`;
+- melhoria mínima considerada nas duas fases: `min_delta=0.001`.
+
+Os gráficos exibem separadamente loss e acurácia de treino/validação para cada fase, com uma linha tracejada indicando a época cujos pesos foram preservados.
+
 ## Observações de reprodutibilidade
 
 - A amostragem usada na divisão por raça possui `random_state=42`.
