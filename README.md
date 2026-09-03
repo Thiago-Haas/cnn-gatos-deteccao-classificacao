@@ -23,12 +23,11 @@ O conjunto é filtrado para imagens de gatos e dividido de forma estratificada e
 │   └── projeto-final.pdf                   # enunciado da atividade
 ├── .gitignore
 ├── README.md
-└── requirements.txt
+├── requirements.txt
+└── setup_venv.sh                           # criação do ambiente local
 ```
 
 ## Como executar
-
-O fluxo original foi preparado para o **Google Colab**, usa caminhos em `/content` e contém uma etapa de upload baseada em `google.colab`. A maneira mais simples de reproduzi-lo é enviar o notebook ao Colab, selecionar um ambiente com GPU e executar as células na ordem.
 
 Para preparar um ambiente local:
 
@@ -47,7 +46,9 @@ Se o executável do Python tiver outro nome ou caminho, informe-o assim:
 PYTHON_BIN=/caminho/para/python ./setup_venv.sh
 ```
 
-Na execução local, altere `DATA_DIR` no notebook para um diretório local e substitua a célula que usa `google.colab.files.upload()` por caminhos de imagens existentes no computador.
+Abra o notebook no VS Code ou JupyterLab, selecione o interpretador `.venv/bin/python` como kernel e execute as células na ordem. Os caminhos usados são relativos à raiz do projeto.
+
+Para testar fotos externas, coloque os arquivos `.jpg`, `.jpeg`, `.png` ou `.webp` no diretório `real_photos/`. A pasta é criada automaticamente pela célula correspondente e não é versionada.
 
 O notebook baixa automaticamente o Oxford-IIIT Pet, os pesos da ResNet50 e o modelo `yolov8n.pt`. Esses artefatos exigem conexão com a internet e não são versionados.
 

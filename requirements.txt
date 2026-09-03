@@ -1,4 +1,5 @@
 grad-cam
+ipykernel
 jupyterlab
 matplotlib
 numpy
