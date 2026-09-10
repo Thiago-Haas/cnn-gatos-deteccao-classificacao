@@ -48,7 +48,7 @@ PYTHON_BIN=/caminho/para/python ./setup_venv.sh
 
 Abra o notebook no VS Code ou JupyterLab, selecione o interpretador `.venv/bin/python` como kernel e execute as células na ordem. Os caminhos usados são relativos à raiz do projeto.
 
-Para testar fotos externas, coloque os arquivos `.jpg`, `.jpeg`, `.png` ou `.webp` no diretório `real_photos/`. A pasta é criada automaticamente pela célula correspondente e não é versionada.
+Para testar fotos externas, crie uma subpasta por raça dentro de `real_photos/`, como `real_photos/Siamese/foto.jpg`. O nome da subpasta será usado como rótulo real. A pasta é criada automaticamente e não é versionada.
 
 O notebook baixa automaticamente o Oxford-IIIT Pet, os pesos da ResNet50 e o modelo `yolov8n.pt`. Esses artefatos exigem conexão com a internet e não são versionados.
 
@@ -56,22 +56,26 @@ O notebook baixa automaticamente o Oxford-IIIT Pet, os pesos da ResNet50 e o mod
 
 1. Baixar e explorar o Oxford-IIIT Pet.
 2. Filtrar as imagens de gatos e criar os rótulos das raças.
-3. Aplicar redimensionamento, normalização e data augmentation.
-4. Treinar a camada classificadora da ResNet50.
-5. Fazer fine-tuning parcial da última camada residual.
-6. Avaliar no conjunto de teste.
-7. Detectar gatos em novas imagens com YOLOv8.
-8. Classificar o recorte e gerar sua explicação com Grad-CAM.
+3. Fazer um split estratificado e reprodutível de 70/15/15.
+4. Aplicar redimensionamento, normalização e data augmentation configurável.
+5. Treinar uma cabeça com Dropout sobre a ResNet50 congelada.
+6. Fazer fine-tuning parcial das camadas `layer3`, `layer4` e `fc`.
+7. Controlar o treino com label smoothing, weight decay, scheduler e early stopping.
+8. Avaliar no conjunto de teste.
+9. Detectar gatos em novas imagens com YOLOv8.
+10. Classificar o recorte e gerar sua explicação com Grad-CAM.
+11. Avaliar um dataset local organizado por raça.
+12. Executar detecção e classificação com a webcam local via OpenCV.
 
 ### Controle de overfitting
 
 As duas fases de treinamento usam early stopping baseado na perda de validação e restauram automaticamente os pesos da melhor época:
 
-- treinamento da camada classificadora: `patience=3`;
-- fine-tuning da `layer4`: `patience=2`;
-- melhoria mínima considerada nas duas fases: `min_delta=0.001`.
+- treinamento da camada classificadora: `HEAD_PATIENCE=5`;
+- fine-tuning de `layer3`, `layer4` e `fc`: `FT_PATIENCE=5`;
+- melhoria mínima considerada pela implementação: `min_delta=0.0001`.
 
-Os gráficos exibem separadamente loss e acurácia de treino/validação para cada fase, com uma linha tracejada indicando a época cujos pesos foram preservados.
+Os melhores pesos são restaurados ao fim de cada fase. O gráfico reúne loss e acurácia de treino/validação e marca o início do fine-tuning.
 
 ## Observações de reprodutibilidade
 
