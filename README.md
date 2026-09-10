@@ -54,6 +54,38 @@ O notebook baixa automaticamente o Oxford-IIIT Pet, os pesos da ResNet50 e o mod
 
 ## Pipeline
 
+### Usar o modelo treinado na webcam
+
+Com o ambiente instalado, execute na raiz do projeto:
+
+```bash
+./run_webcam.sh
+```
+
+O lançador ativa a `.venv` automaticamente e aceita as opções do script Python.
+
+O script carrega `artifacts/cat_breed_classifier.pt` sem executar o notebook nem
+treinar novamente. Para usar o treinamento do Colab, baixe
+`/content/cat_breed_classifier.pt` e coloque-o nessa pasta, ou informe outro caminho:
+
+```bash
+./run_webcam.sh --model ~/Downloads/cat_breed_classifier.pt --camera 0
+```
+
+A janela mostra a raça e a confiança para cada gato detectado. Pressione **Q**
+ou **Esc** para sair. Se necessário, tente `--camera 1` para outra câmera ou
+`--device cpu` para executar sem CUDA. Use `python webcam.py --help` para todas
+as opções. É necessário executar em uma sessão gráfica local com acesso à webcam.
+
+São aceitos os checkpoints das versões original e corrigida do notebook. O
+pré-processamento usa resolução 224 e normalização ImageNet; se você alterou
+`IMG_SIZE` no treino, informe o mesmo valor em `--image-size`. Os pesos YOLO
+`yolov8n.pt` são usados separadamente para detectar gatos e baixados se ausentes.
+O classificador só reconhece as raças do treinamento, incluindo ao mostrar
+resultados para gatos sem raça definida.
+
+### Etapas do notebook
+
 1. Baixar e explorar o Oxford-IIIT Pet.
 2. Filtrar as imagens de gatos e criar os rótulos das raças.
 3. Fazer um split estratificado e reprodutível de 70/15/15.
