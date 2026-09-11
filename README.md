@@ -6,19 +6,20 @@ Projeto final da disciplina de Aprendizado Profundo. O notebook implementa um pi
 
 O projeto usa:
 
-- **Oxford-IIIT Pet** como conjunto de dados;
+- **Oxford-IIIT Pet** e **Cat Breeds Dataset**, de Atharva Taras, como conjuntos de dados;
 - **ResNet50** pré-treinada na ImageNet para classificar as raças;
 - **YOLOv8 Nano** pré-treinado no COCO para detectar e recortar gatos;
 - **Grad-CAM** para visualizar as regiões que influenciam a classificação;
 - acurácia, F1-score macro, relatório de classificação e matriz de confusão para avaliação.
 
-O conjunto é filtrado para imagens de gatos e dividido de forma estratificada em 70% para treino, 15% para validação e 15% para teste.
+As imagens de gatos das duas fontes são combinadas, os rótulos são padronizados e duplicatas RGB exatas são removidas antes da divisão estratificada em 70% para treino, 15% para validação e 15% para teste.
 
 ## Estrutura
 
 ```text
 .
 ├── cnn_gato_deteccao_classificacao.ipynb  # implementação e análise
+├── cat_datasets.py                        # download, rótulos e limpeza dos datasets
 ├── docs/
 │   └── projeto-final.pdf                   # enunciado da atividade
 ├── .gitignore
@@ -50,7 +51,41 @@ Abra o notebook no VS Code ou JupyterLab, selecione o interpretador `.venv/bin/p
 
 Para testar fotos externas, crie uma subpasta por raça dentro de `real_photos/`, como `real_photos/Siamese/foto.jpg`. O nome da subpasta será usado como rótulo real. A pasta é criada automaticamente e não é versionada.
 
-O notebook baixa automaticamente o Oxford-IIIT Pet, os pesos da ResNet50 e o modelo `yolov8n.pt`. Esses artefatos exigem conexão com a internet e não são versionados.
+O notebook baixa automaticamente o Oxford-IIIT Pet, o Cat Breeds Dataset, os pesos da ResNet50 e o modelo `yolov8n.pt`. Esses artefatos exigem conexão com a internet e não são versionados.
+
+## Dataset adicional e rótulos
+
+O [Cat Breeds Dataset](https://github.com/AtharvaTaras/Cat-Breeds-Dataset)
+contém 4.835 imagens em 20 raças antes da limpeza (cerca de 303 MB descompactados).
+O download está fixado no commit `56a69059119626ed210023bbfc6fdcb8262e8703`
+e fica em `data/`. Mantenha `cat_datasets.py` ao lado do notebook, inclusive se
+copiar o projeto para o Colab. Para usar apenas Oxford, defina
+`CONFIG["USE_CAT_BREEDS_DATASET"] = False` antes de executar as células.
+
+As pastas usam nomes como `maine_coon_cat`; a integração remove `_cat` e adota
+o padrão do Oxford, como `Maine_Coon`, `British_Shorthair` e `Russian_Blue`.
+As dez raças adicionais são `American_Shorthair`, `Cornish_Rex`, `Devon_Rex`,
+`Himalayan`, `Manx`, `Norwegian_Forest`, `Oriental_Shorthair`, `Savannah`,
+`Scottish_Fold` e `Turkish_Angora`. A união contém **22 classes**; `Bombay` e
+`Egyptian_Mau` continuam vindo do Oxford.
+
+Antes do split, a integração remove imagens ilegíveis, mantém uma cópia de
+imagens com pixels RGB idênticos e exclui todas as cópias quando os rótulos
+conflitam. Os arquivos `artifacts/dataset_manifest.csv`, `dataset_rejections.csv`
+e `{train,val,test}_manifest.csv` registram a origem, os rótulos e as exclusões.
+Fotos semelhantes, recortadas ou recomprimidas não são detectadas por essa limpeza.
+
+Execute novamente o notebook para treinar e exportar o modelo com as 22 classes.
+O `.pt` antigo continua reconhecendo apenas suas raças originais. A webcam lê
+o mapeamento salvo no novo checkpoint automaticamente. Os resultados antigos
+do notebook foram limpos para evitar confundi-los com uma avaliação das 22 classes.
+
+**Citation: Atharva Taras, 2026. Cat Breeds Dataset.**
+[Fonte](https://github.com/AtharvaTaras/Cat-Breeds-Dataset) ·
+[Licença CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Alterações realizadas na integração: padronização dos rótulos e exclusão de
+imagens ilegíveis, duplicatas exatas e conflitos de rótulo. A licença e o README
+originais acompanham o dataset baixado.
 
 ## Pipeline
 
@@ -86,8 +121,8 @@ resultados para gatos sem raça definida.
 
 ### Etapas do notebook
 
-1. Baixar e explorar o Oxford-IIIT Pet.
-2. Filtrar as imagens de gatos e criar os rótulos das raças.
+1. Baixar e explorar o Oxford-IIIT Pet e o Cat Breeds Dataset.
+2. Filtrar os gatos, unificar rótulos e remover imagens inválidas e duplicadas.
 3. Fazer um split estratificado e reprodutível de 70/15/15.
 4. Aplicar redimensionamento, normalização e data augmentation configurável.
 5. Treinar uma cabeça com Dropout sobre a ResNet50 congelada.
@@ -118,7 +153,7 @@ Os melhores pesos são restaurados ao fim de cada fase. O gráfico reúne loss e
 
 ## Limitações
 
-- O classificador reconhece apenas as raças de gato presentes no Oxford-IIIT Pet.
+- O classificador reconhece apenas as raças presentes nos datasets usados no treinamento.
 - Gatos sem raça definida ou raças ausentes sempre serão associados a uma classe conhecida.
 - Mudanças de iluminação, pose, enquadramento e fundo podem reduzir a qualidade fora do dataset.
 - A detecção usa pesos genéricos do COCO e não foi ajustada especificamente para este conjunto.
