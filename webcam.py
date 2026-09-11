@@ -10,6 +10,8 @@ from torch import nn
 from torchvision import models, transforms
 from ultralytics import YOLO
 
+from cat_landmarks import detect_landmarks, draw_landmarks, load_landmark_model
+
 
 PROJECT_DIR = Path(__file__).resolve().parent
 WINDOW = "Gatos - Q ou Esc para sair"
@@ -50,7 +52,8 @@ def preprocessing(image_size=224):
 
 
 @torch.inference_mode()
-def annotate_frame(frame, detector, classifier, labels, transform, device, conf):
+def annotate_frame(frame, detector, classifier, labels, transform, device, conf,
+                   landmark_model=None, landmark_conf=0.25):
     result = detector.predict(
         source=frame, classes=[15], conf=conf, device=str(device), verbose=False,
     )[0]
@@ -64,6 +67,10 @@ def annotate_frame(frame, detector, classifier, labels, transform, device, conf)
         if x2 <= x1 or y2 <= y1:
             continue
         crop = Image.fromarray(cv2.cvtColor(frame[y1:y2, x1:x2], cv2.COLOR_BGR2RGB))
+        # Estima os pontos antes da raça; a ResNet recebe o recorte RGB original.
+        if landmark_model is not None:
+            features = detect_landmarks(crop, landmark_model, device, conf=landmark_conf)
+            annotated = draw_landmarks(annotated, features, offset=(x1, y1))
         tensor = transform(crop).unsqueeze(0).to(device)
         probabilities = classifier(tensor).softmax(dim=1)[0]
         index = int(probabilities.argmax().item())
@@ -85,6 +92,10 @@ def parse_args():
     parser.add_argument("--yolo", type=Path, default=PROJECT_DIR / "yolov8n.pt",
                         help="Pesos YOLO COCO (baixados automaticamente se ausentes).")
     parser.add_argument("--camera", type=int, default=0, help="Índice da webcam (padrão: 0).")
+    parser.add_argument("--landmarks", type=Path,
+                        help="Modelo CAT de nove pontos faciais (artifacts/cat_landmarks.pt).")
+    parser.add_argument("--landmark-conf", type=float, default=0.25,
+                        help="Confiança mínima da detecção da cabeça.")
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument("--conf", type=float, default=0.25, help="Confiança mínima da detecção.")
     parser.add_argument("--image-size", type=int, default=224,
@@ -92,6 +103,8 @@ def parse_args():
     args = parser.parse_args()
     if not 0 < args.conf <= 1:
         parser.error("--conf deve estar entre 0 (exclusivo) e 1.")
+    if not 0 < args.landmark_conf <= 1:
+        parser.error("--landmark-conf deve estar entre 0 (exclusivo) e 1.")
     if args.image_size <= 0:
         parser.error("--image-size deve ser positivo.")
     if args.device == "cuda" and not torch.cuda.is_available():
@@ -107,6 +120,7 @@ def main():
     )
     classifier, labels = load_classifier(args.model, device)
     detector = YOLO(str(args.yolo))
+    landmark_model = load_landmark_model(args.landmarks) if args.landmarks else None
     transform = preprocessing(args.image_size)
     print(f"Modelo carregado: {len(labels)} raças | dispositivo: {device}")
     print("Na janela da webcam, pressione Q ou Esc para sair.")
@@ -124,6 +138,7 @@ def main():
                 raise RuntimeError("Não foi possível ler um frame da webcam.")
             annotated = annotate_frame(
                 frame, detector, classifier, labels, transform, device, args.conf,
+                landmark_model=landmark_model, landmark_conf=args.landmark_conf,
             )
             cv2.imshow(WINDOW, annotated)
             if cv2.waitKey(1) & 0xFF in (ord("q"), ord("Q"), 27):

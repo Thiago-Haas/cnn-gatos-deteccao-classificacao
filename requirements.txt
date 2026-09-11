@@ -6,6 +6,7 @@ numpy
 opencv-python
 pandas
 pillow
+pyyaml
 scikit-learn
 seaborn
 torch
