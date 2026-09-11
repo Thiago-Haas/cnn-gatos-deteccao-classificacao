@@ -59,8 +59,19 @@ O [Cat Breeds Dataset](https://github.com/AtharvaTaras/Cat-Breeds-Dataset)
 contém 4.835 imagens em 20 raças antes da limpeza (cerca de 303 MB descompactados).
 O download está fixado no commit `56a69059119626ed210023bbfc6fdcb8262e8703`
 e fica em `data/`. Mantenha `cat_datasets.py` ao lado do notebook, inclusive se
-copiar o projeto para o Colab. Para usar apenas Oxford, defina
-`CONFIG["USE_CAT_BREEDS_DATASET"] = False` antes de executar as células.
+copiar o projeto para o Colab. Selecione a fonte em `CONFIG["DATASET_MODE"]`:
+
+| Valor | Dataset usado | Raças |
+|---|---|---|
+| `"oxford"` | Apenas Oxford-IIIT Pet | 12 |
+| `"cat_breeds"` | Apenas Cat Breeds Dataset, de Atharva Taras | 20 |
+| `"both"` | Os dois (padrão) | 22 |
+
+Somente as fontes escolhidas são baixadas e lidas. Ao mudar o valor, reinicie
+o kernel e execute todas as células para atualizar os rótulos, splits e modelo.
+O checkpoint registra as fontes usadas. Cada treinamento salva no mesmo
+`artifacts/cat_breed_classifier.pt`; copie o arquivo antes se quiser preservar
+modelos de experimentos anteriores.
 
 As pastas usam nomes como `maine_coon_cat`; a integração remove `_cat` e adota
 o padrão do Oxford, como `Maine_Coon`, `British_Shorthair` e `Russian_Blue`.
