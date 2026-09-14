@@ -1,0 +1,7 @@
+# Dependências do pipeline de exportação ONNX; não exige Jupyter ou Grad-CAM.
+torch
+torchvision
+ultralytics
+onnx>=1.17,<2
+onnxruntime>=1.22,<2
+numpy

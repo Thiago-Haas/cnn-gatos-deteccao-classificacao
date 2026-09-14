@@ -23,7 +23,11 @@ As imagens de gatos das duas fontes são combinadas, os rótulos são padronizad
 ├── cat_datasets.py                        # download, rótulos e limpeza dos datasets
 ├── cat_landmarks.py                       # CAT Dataset e inferência de pontos faciais
 ├── train_cat_landmarks.py                 # treino separado dos pontos faciais
+├── scripts/export_web_models.py          # exportação ONNX e paridade
+├── export_web_models.sh                  # pipeline de exportação para web
+├── requirements-export.txt              # dependências da exportação
 ├── docs/
+│   ├── EXPORTACAO_WEB.md                 # integração com mobile-onnx
 │   └── projeto-final.pdf                   # enunciado da atividade
 ├── .gitignore
 ├── README.md
@@ -32,6 +36,12 @@ As imagens de gatos das duas fontes são combinadas, os rótulos são padronizad
 ```
 
 ## Como executar
+
+Para usar a câmera do celular com processamento no navegador, veja o projeto
+[ONNX Web/PWA mobile-onnx](https://github.com/Thiago-Haas/mobile-onnx). Ele oferece
+seleção de fotos, câmera e cache offline, sem servidor de inferência.
+A exportação dos modelos fica neste repositório: veja o
+[guia de exportação para web](docs/EXPORTACAO_WEB.md).
 
 Para preparar um ambiente local:
 
@@ -254,3 +264,11 @@ Os melhores pesos são restaurados ao fim de cada fase. O gráfico reúne loss e
 - Gatos sem raça definida ou raças ausentes sempre serão associados a uma classe conhecida.
 - Mudanças de iluminação, pose, enquadramento e fundo podem reduzir a qualidade fora do dataset.
 - A detecção usa pesos genéricos do COCO e não foi ajustada especificamente para este conjunto.
+
+## Exportar para o navegador
+
+Após treinar, execute `./export_web_models.sh`. O pipeline exporta e valida
+`classifier.onnx`, `detector.onnx` e `metadata.json` em `artifacts/onnx/`.
+Copie o pacote completo para a pasta `models/` do
+[mobile-onnx](https://github.com/Thiago-Haas/mobile-onnx).
+Veja [comandos, parâmetros e validação](docs/EXPORTACAO_WEB.md).
