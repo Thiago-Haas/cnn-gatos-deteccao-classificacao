@@ -8,8 +8,13 @@
 cnn_gato_deteccao_classificacao.ipynb  Treinamento, avaliação e visualizações
 cat_datasets.py                       Download, rótulos e limpeza dos dados
 cat_landmarks.py                      Preparação e inferência de pontos faciais
+cat_experimentos.py                   Plano de experimentos, análise SRD e GPU
+cat_graficos.py                       Figuras da apresentação (artifacts/figuras/)
 train_cat_landmarks.py                Treino opcional de YOLO Pose
 webcam.py                            Inferência local e regra SRD
+scripts/experimentos.py              Linha de comando dos experimentos E1–E4
+scripts/analise_srd.py               Linha de comando da análise da regra SRD
+artifacts/figuras/                   Figuras geradas pelo notebook, usadas no deck
 scripts/export_web_models.py         Exportação ONNX e validação de paridade
 tests/                               Testes dos datasets e pontos faciais
 docs/                                Guias, referências e materiais do trabalho
@@ -20,6 +25,32 @@ requirements*.txt                    Dependências de treino e exportação
 
 Os módulos Python permanecem ao lado do notebook para permitir execução local
 e no Colab. Execute os comandos a partir da raiz.
+
+`cat_experimentos.py` é usado tanto pelas seções 12 e 13 do notebook quanto pelos
+scripts de linha de comando, sem duplicar lógica. Manter o `Dataset` em um módulo
+— e não em uma célula — é o que permite ao `DataLoader` usar vários processos: é
+por isso que o restante do notebook precisa de `NUM_WORKERS = 0`. A função
+`preparar_gpu()` concentra a configuração de GPU (precisão mista, `channels_last`,
+`cudnn.benchmark`, TF32 e workers) e imprime o motivo quando a execução cai em CPU.
+
+## Estrutura do notebook
+
+O notebook segue o **checklist de entrega**: uma seção por item, com o número do
+item declarado em cada cabeçalho e uma tabela no topo mapeando checklist → seção.
+Ele é feito para um **Run All**, com as saídas limpas no repositório — assim as
+saídas entregues são sempre de uma única execução coerente.
+
+A webcam local não está no notebook: depende de câmera e de sessão gráfica, e
+quebrava o Run All. Ela vive em `webcam.py` e, para o navegador, no repositório
+`mobile-onnx`.
+
+## Experimentos e figuras
+
+O plano exigido pelo trabalho (baseline e duas variações) está documentado em
+[Checklist de entrega](CHECKLIST.md#o-que-rodar), com os resultados e os
+comandos. As saídas ficam em `artifacts/experimentos/` e as figuras da
+apresentação em `artifacts/figuras/` — rodar o notebook mantém o deck e o
+relatório sincronizados com a última execução.
 
 ## Ambiente e testes
 
