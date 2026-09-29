@@ -1,6 +1,6 @@
 # Exportar os modelos para o app web
 
-[Projeto de treinamento](../README.md) · [Aplicação mobile-onnx](https://github.com/Thiago-Haas/mobile-onnx)
+[Documentação](README.md) · [Projeto de treinamento](../README.md) · [Aplicação mobile-onnx](https://github.com/Thiago-Haas/mobile-onnx)
 
 O notebook treina o classificador e salva `artifacts/cat_breed_classifier.pt`.
 O detector é o `yolov8n.pt` pré-treinado no COCO. Este pipeline converte os dois

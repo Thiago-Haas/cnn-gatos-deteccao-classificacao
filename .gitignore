@@ -1,17 +1,17 @@
-# Python
+# Ambientes Python e caches
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .ipynb_checkpoints/
 
-# Editors and operating systems
+# Editores e sistema operacional
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
 
-# Datasets and generated artifacts
+# Dados e artefatos gerados
 data/
 datasets/
 oxford_pets/
@@ -20,12 +20,19 @@ runs/
 outputs/
 artifacts/
 
-# Model weights
+# Pesos dos modelos
 *.pt
 *.pth
 *.onnx
 
-# Environment and secrets
+# Variáveis de ambiente e segredos
 .env
 .env.*
 !.env.example
+
+# Caches de ferramentas e arquivos temporários
+.pytest_cache/
+.ruff_cache/
+*.log
+*.tmp
+*~
