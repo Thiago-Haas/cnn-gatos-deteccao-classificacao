@@ -12,6 +12,8 @@ cat_experimentos.py                   Plano de experimentos, análise SRD e GPU
 cat_graficos.py                       Figuras da apresentação (artifacts/figuras/)
 train_cat_landmarks.py                Treino opcional de YOLO Pose
 webcam.py                            Inferência local e regra SRD
+cat_calibration.py                   Validação do perfil pelo hash do checkpoint
+config/srd.json                      Temperatura e limiar do E2
 scripts/experimentos.py              Linha de comando dos experimentos E1–E4
 scripts/analise_srd.py               Linha de comando da análise da regra SRD
 artifacts/figuras/                   Figuras geradas pelo notebook, usadas no deck

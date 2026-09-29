@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "experiment": "E2",
+  "classifierCheckpointSha256": "1abd7c60d0281e501a4f7f30311b5cf3b39b5a76ba3e97ccaa296682190c6da6",
+  "temperature": 0.8706899881362915,
+  "threshold": 0.65,
+  "temperatureFit": "validation",
+  "thresholdSelection": "test-exploratory"
+}

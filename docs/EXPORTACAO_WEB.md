@@ -76,6 +76,8 @@ configuração; um pacote novo passa a ser baixado pelos usuários após o deplo
 A comparação numérica não substitui avaliação de acurácia em fotos reais.
 Landmarks e Grad-CAM não são exportados para a aplicação web.
 
-O checkpoint padrão atual corresponde ao experimento E2. A calibração de
-temperatura estudada em `cat_experimentos.py` é uma análise separada: não está
-incorporada aos logits exportados nem altera automaticamente o limiar SRD do app.
+O checkpoint padrão atual corresponde ao experimento E2. O exportador lê
+`config/srd.json`, verifica o SHA-256 do checkpoint e publica o perfil em
+`classifierCalibration`. Para outro estudo, use `--calibration /caminho/srd.json`.
+Para exportar sem calibração, use `--no-calibration` (T=1, limiar 0,40).
+O ONNX mantém logits brutos; o app aplica a temperatura no pós-processamento.

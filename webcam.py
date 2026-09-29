@@ -10,6 +10,7 @@ from torch import nn
 from torchvision import models, transforms
 from ultralytics import YOLO
 
+from cat_calibration import load_calibration, DEFAULT_CALIBRATION
 from cat_landmarks import detect_landmarks, draw_landmarks, load_landmark_model
 
 
@@ -51,12 +52,12 @@ def preprocessing(image_size=224):
     ])
 
 
-BREED_CONF_THRESHOLD = 0.40  # Confiança mínima para identificar a raça; abaixo disso: SRD.
+BREED_CONF_THRESHOLD = 0.40  # Limiar legado; a CLI usa o perfil validado do checkpoint.
 
 
 @torch.inference_mode()
 def annotate_frame(frame, detector, classifier, labels, transform, device, conf,
-                   landmark_model=None, landmark_conf=0.25, breed_conf=BREED_CONF_THRESHOLD):
+                   landmark_model=None, landmark_conf=0.25, breed_conf=BREED_CONF_THRESHOLD, temperature=1.0):
     result = detector.predict(
         source=frame, classes=[15], conf=conf, device=str(device), verbose=False,
     )[0]
@@ -75,7 +76,7 @@ def annotate_frame(frame, detector, classifier, labels, transform, device, conf,
             features = detect_landmarks(crop, landmark_model, device, conf=landmark_conf)
             annotated = draw_landmarks(annotated, features, offset=(x1, y1))
         tensor = transform(crop).unsqueeze(0).to(device)
-        probabilities = classifier(tensor).softmax(dim=1)[0]
+        probabilities = (classifier(tensor) / temperature).softmax(dim=1)[0]
         index = int(probabilities.argmax().item())
         top_prob = probabilities[index].item()
         if top_prob >= breed_conf:
@@ -110,15 +111,18 @@ def parse_args():
     parser.add_argument("--conf", type=float, default=0.25, help="Confiança mínima da detecção.")
     parser.add_argument("--image-size", type=int, default=224,
                         help="Resolução usada no treino do classificador (padrão: 224).")
-    parser.add_argument("--breed-conf", type=float, default=BREED_CONF_THRESHOLD,
-                        help="Confiança mínima para identificar a raça (padrão: 0.40). "
+    parser.add_argument("--calibration", type=Path, default=DEFAULT_CALIBRATION,
+                        help="Parâmetros SRD vinculados ao checkpoint.")
+    parser.add_argument("--no-calibration", action="store_true", help="Usar softmax sem calibração e limiar legado de 40%.")
+    parser.add_argument("--breed-conf", type=float, default=None,
+                        help="Confiança mínima; usa o limiar do arquivo de calibração quando omitida. "
                              "Abaixo desse valor o gato é exibido como 'Sem Raça Definida'.")
     args = parser.parse_args()
     if not 0 < args.conf <= 1:
         parser.error("--conf deve estar entre 0 (exclusivo) e 1.")
     if not 0 < args.landmark_conf <= 1:
         parser.error("--landmark-conf deve estar entre 0 (exclusivo) e 1.")
-    if not 0 < args.breed_conf <= 1:
+    if args.breed_conf is not None and not 0 < args.breed_conf <= 1:
         parser.error("--breed-conf deve estar entre 0 (exclusivo) e 1.")
     if args.image_size <= 0:
         parser.error("--image-size deve ser positivo.")
@@ -133,11 +137,14 @@ def main():
         ("cuda" if torch.cuda.is_available() else "cpu")
         if args.device == "auto" else args.device
     )
+    calibration = load_calibration(args.model, args.calibration, enabled=not args.no_calibration)
+    threshold = args.breed_conf if args.breed_conf is not None else calibration["threshold"]
     classifier, labels = load_classifier(args.model, device)
     detector = YOLO(str(args.yolo))
     landmark_model = load_landmark_model(args.landmarks) if args.landmarks else None
     transform = preprocessing(args.image_size)
     print(f"Modelo carregado: {len(labels)} raças | dispositivo: {device}")
+    print(f"SRD: temperatura {calibration['temperature']:.6f} | limiar {threshold:.0%}")
     print("Na janela da webcam, pressione Q ou Esc para sair.")
     capture = cv2.VideoCapture(args.camera)
     try:
@@ -154,7 +161,7 @@ def main():
             annotated = annotate_frame(
                 frame, detector, classifier, labels, transform, device, args.conf,
                 landmark_model=landmark_model, landmark_conf=args.landmark_conf,
-                breed_conf=args.breed_conf,
+                breed_conf=threshold, temperature=calibration["temperature"],
             )
             cv2.imshow(WINDOW, annotated)
             if cv2.waitKey(1) & 0xFF in (ord("q"), ord("Q"), 27):

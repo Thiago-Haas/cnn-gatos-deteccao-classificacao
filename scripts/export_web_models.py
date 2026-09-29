@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 import shutil
 import tempfile
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from cat_calibration import load_calibration, DEFAULT_CALIBRATION
 
 import numpy as np
 import onnx
@@ -22,11 +25,14 @@ def main():
     parser.add_argument("--detector", type=Path, default=project / "yolov8n.pt")
     parser.add_argument("--output", type=Path, default=project / "artifacts/onnx")
     parser.add_argument("--detector-size", type=int, default=320)
+    parser.add_argument("--calibration", type=Path, default=DEFAULT_CALIBRATION)
+    parser.add_argument("--no-calibration", action="store_true")
     args = parser.parse_args()
     if args.detector_size < 32 or args.detector_size % 32:
         parser.error("--detector-size deve ser múltiplo de 32.")
     if not args.classifier.is_file() or not args.detector.is_file():
         parser.error("Informe os dois checkpoints locais existentes.")
+    calibration = load_calibration(args.classifier, args.calibration, enabled=not args.no_calibration)
     torch.set_num_threads(2)
     checkpoint = torch.load(args.classifier, map_location="cpu", weights_only=True)
     labels = {int(k): v for k, v in checkpoint["idx_to_breed"].items()}
@@ -81,7 +87,7 @@ def main():
                 for chunk in iter(lambda: file.read(1024 * 1024), b''):
                     value.update(chunk)
                 return value.hexdigest()
-        metadata = {"version": 2,
+        metadata = {"version": 2, "classifierCalibration": calibration,
                     "sourceRepository": "https://github.com/Thiago-Haas/cnn-gatos-deteccao-classificacao",
                     "training": {"experiment": checkpoint.get("experimento"),
                                  "classifierCheckpointSha256": digest(args.classifier),

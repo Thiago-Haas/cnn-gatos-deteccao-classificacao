@@ -57,7 +57,9 @@ class DatasetTests(unittest.TestCase):
     def test_notebook_dataset_modes(self):
         notebook = json.loads((Path(__file__).resolve().parents[1] /
                                "cnn_gato_deteccao_classificacao.ipynb").read_text())
-        cells = [''.join(notebook['cells'][i]['source']) for i in (7, 8)]
+        code_cells = [''.join(cell['source']) for cell in notebook['cells'] if cell['cell_type'] == 'code']
+        cells = [next(source for source in code_cells if 'DATASET_MODE = CONFIG[' in source),
+                 next(source for source in code_cells if 'dataset_frames = []' in source)]
         for mode in ("oxford", "cat_breeds", "both"):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)

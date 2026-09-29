@@ -67,9 +67,31 @@ a regra de baixa confiança descrita abaixo para exibir SRD.
 
 ## Sem Raça Definida (SRD)
 
-Na webcam, uma confiança abaixo de **40%** exibe **Sem Raça Definida** em
-laranja. Ajuste esse limite com `./run_webcam.sh --breed-conf 0.40`.
+Na webcam, uma confiança abaixo de **65%** exibe **Sem Raça Definida** em
+laranja. Ajuste esse limite com `./run_webcam.sh --breed-conf 0.65`.
 O percentual continua sendo o da raça mais provável; não representa uma
 probabilidade de SRD. Essa regra não cria uma classe treinada nem comprova
 raça ou genealogia. Um gato SRD ainda pode receber uma sugestão com confiança alta.
 A aplicação web usa a mesma regra com um controle ajustável na interface.
+
+## Calibração SRD do E2
+
+A confiança é calculada com `softmax(logits / T)`, usando
+**T = 0,8706899881362915** e limiar padrão **65%**. A classe mais provável
+não muda com a temperatura; sua confiança e a decisão de rejeição podem mudar.
+Abaixo do limiar, o resultado exibido é SRD. Igualdade ao limiar aceita a raça.
+
+A temperatura foi ajustada na validação. O limiar de 65% foi escolhido na
+varredura do **teste**, portanto é uma escolha exploratória: os 91,33% entre
+aceitos medidos nessa mesma varredura não são uma estimativa independente de
+produção. No controle de 30 fotos SRD, o estudo rejeitou 46,67%; isso não torna
+SRD uma classe treinada nem garante identificação de gatos sem raça.
+
+O estudo original permanece como registro do procedimento e dos resultados.
+
+A webcam carrega `config/srd.json` automaticamente e confere o hash do checkpoint.
+Use `--breed-conf 0.70` para mudar só o limiar, `--calibration outro.json` para
+outro perfil ou `--no-calibration` para o comportamento legado (T=1, 40%).
+Um novo treinamento exige um perfil compatível ou desativação explícita.
+Esta configuração afeta a webcam e a exportação para web; as células de
+avaliação e Grad-CAM do notebook continuam produzindo seus resultados originais.
