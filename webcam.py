@@ -51,9 +51,12 @@ def preprocessing(image_size=224):
     ])
 
 
+BREED_CONF_THRESHOLD = 0.40  # Confiança mínima para identificar a raça; abaixo disso: SRD.
+
+
 @torch.inference_mode()
 def annotate_frame(frame, detector, classifier, labels, transform, device, conf,
-                   landmark_model=None, landmark_conf=0.25):
+                   landmark_model=None, landmark_conf=0.25, breed_conf=BREED_CONF_THRESHOLD):
     result = detector.predict(
         source=frame, classes=[15], conf=conf, device=str(device), verbose=False,
     )[0]
@@ -74,10 +77,17 @@ def annotate_frame(frame, detector, classifier, labels, transform, device, conf,
         tensor = transform(crop).unsqueeze(0).to(device)
         probabilities = classifier(tensor).softmax(dim=1)[0]
         index = int(probabilities.argmax().item())
-        text = f"{labels[index].replace('_', ' ')} {probabilities[index].item():.1%}"
-        cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        top_prob = probabilities[index].item()
+        if top_prob >= breed_conf:
+            breed_name = labels[index].replace("_", " ")
+            text = f"{breed_name} {top_prob:.1%}"
+            color = (0, 255, 0)
+        else:
+            text = f"Sem Raça Definida ({top_prob:.1%})"
+            color = (0, 165, 255)  # laranja: indica baixa confiança
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
         cv2.putText(annotated, text, (x1, max(24, y1 - 10)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, color, 2)
         found = True
     if not found:
         cv2.putText(annotated, "Nenhum gato detectado", (15, 30),
@@ -100,11 +110,16 @@ def parse_args():
     parser.add_argument("--conf", type=float, default=0.25, help="Confiança mínima da detecção.")
     parser.add_argument("--image-size", type=int, default=224,
                         help="Resolução usada no treino do classificador (padrão: 224).")
+    parser.add_argument("--breed-conf", type=float, default=BREED_CONF_THRESHOLD,
+                        help="Confiança mínima para identificar a raça (padrão: 0.40). "
+                             "Abaixo desse valor o gato é exibido como 'Sem Raça Definida'.")
     args = parser.parse_args()
     if not 0 < args.conf <= 1:
         parser.error("--conf deve estar entre 0 (exclusivo) e 1.")
     if not 0 < args.landmark_conf <= 1:
         parser.error("--landmark-conf deve estar entre 0 (exclusivo) e 1.")
+    if not 0 < args.breed_conf <= 1:
+        parser.error("--breed-conf deve estar entre 0 (exclusivo) e 1.")
     if args.image_size <= 0:
         parser.error("--image-size deve ser positivo.")
     if args.device == "cuda" and not torch.cuda.is_available():
@@ -139,6 +154,7 @@ def main():
             annotated = annotate_frame(
                 frame, detector, classifier, labels, transform, device, args.conf,
                 landmark_model=landmark_model, landmark_conf=args.landmark_conf,
+                breed_conf=args.breed_conf,
             )
             cv2.imshow(WINDOW, annotated)
             if cv2.waitKey(1) & 0xFF in (ord("q"), ord("Q"), 27):
