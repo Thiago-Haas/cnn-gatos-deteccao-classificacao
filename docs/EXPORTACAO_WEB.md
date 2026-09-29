@@ -68,8 +68,14 @@ configuração; um pacote novo passa a ser baixado pelos usuários após o deplo
 - Exportação FP32/opset 17; `--detector-size` aceita múltiplos de 32.
 - Validação dos grafos com `onnx.checker` e comparação PyTorch/ONNX em tensores
   reprodutíveis. Os erros máximos ficam em `metadata.json`.
+- Origem em `training`: experimento, SHA-256 do checkpoint e fontes selecionadas.
+  Checkpoints antigos sem esses campos continuam aceitos.
 - Hash SHA-256 dos dois ONNX em `modelHashes`, para detectar arquivos misturados
   ou modificados e permitir atualização automática do cache no app.
 
 A comparação numérica não substitui avaliação de acurácia em fotos reais.
 Landmarks e Grad-CAM não são exportados para a aplicação web.
+
+O checkpoint padrão atual corresponde ao experimento E2. A calibração de
+temperatura estudada em `cat_experimentos.py` é uma análise separada: não está
+incorporada aos logits exportados nem altera automaticamente o limiar SRD do app.

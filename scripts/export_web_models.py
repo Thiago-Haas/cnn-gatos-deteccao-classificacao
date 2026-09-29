@@ -36,7 +36,7 @@ def main():
     model = models.resnet50(weights=None)
     state = checkpoint["model_state_dict"]
     linear = nn.Linear(model.fc.in_features, len(labels))
-    model.fc = nn.Sequential(nn.Dropout(0.4), linear) if "fc.1.weight" in state else linear
+    model.fc = nn.Sequential(nn.Dropout(float(checkpoint.get("config", {}).get("DROPOUT", 0.4))), linear) if "fc.1.weight" in state else linear
     model.load_state_dict(state, strict=True)
     model.eval()
     args.output.mkdir(parents=True, exist_ok=True)
@@ -83,6 +83,9 @@ def main():
                 return value.hexdigest()
         metadata = {"version": 2,
                     "sourceRepository": "https://github.com/Thiago-Haas/cnn-gatos-deteccao-classificacao",
+                    "training": {"experiment": checkpoint.get("experimento"),
+                                 "classifierCheckpointSha256": digest(args.classifier),
+                                 "datasetMode": checkpoint.get("config", {}).get("DATASET_MODE")},
                     "modelHashes": {"detector": digest(exported), "classifier": digest(classifier_path)}, "labels": [labels[i] for i in range(len(labels))],
                     "classifierSize": size, "detectorSize": args.detector_size,
                     "catClass": 15, "mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225],
